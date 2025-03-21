@@ -1,9 +1,9 @@
 #include <unistd.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <fcntl.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
+#include <dirent.h>
 
 #define BUFFER  			100
 #define MAX_FILE_SIZE 50
@@ -36,33 +36,33 @@ int str_find(char str_a[], char character) {
 	return -1;
 }
 
-bool str_contains(char str_a[], char character) {
+int str_contains(char str_a[], char character) {
 	int index = 0;
 	while(str_a[index] != '\0') {
 		if(str_a[index] == character) {
-			return true;
+			return 1;
 		}
 		index++;
 	}
-	return false;
+	return 0;
 }
 
-bool str_compare(char str_a[], char str_b[]) {
+int str_compare(char str_a[], char str_b[]) {
 	int index = 0;
 	while(str_a[index] != '\0' || str_b[index] != '\0') {
 		if(str_a[index] != str_b[index]) {
-			return false;	
+			return 0;	
 		}
 		index++;
 	}
-	return true;
+	return 1;
 }
 
 int main(void) {
 	char buffer[BUFFER];
 	int bytes_read;
 	char prompt[] = "wall_nut> ";
-	while(true) {
+	while(1) {
 		start:
 		sys_write(STDOUT_FILENO, prompt);
 	
@@ -71,9 +71,14 @@ int main(void) {
 		if(bytes_read > 0 && bytes_read < BUFFER - 1) {
 			buffer[bytes_read] = '\0';	
 		}
+		
+		if(str_compare(buffer, "ls\n")) {
+			system("ls");
+			goto start;		
+		}
 
 		if(str_compare(buffer, "exit\n")) {
-			exit(SUCCESS);	
+			syscall(SYS_exit);	
 		}
 
 		if(str_compare(buffer, "clear\n")) {
